@@ -1847,3 +1847,80 @@ footer{view-transition-name:mt-foot}
 
 /* === szary tekst dociągnięty do czytelności (WCAG 4.5 na wszystkich tłach) === */
 :root{--muted:#6B665D;}
+
+/* --- logo w pasku: przezroczysty znak JN, dwie wersje pod ciemny i jasny pasek (01.10.2026) ---
+   Plik z wizytówki Google miał białe tło i szary cień 3D - w przezroczystym pasku nad
+   ciemnym zdjęciem wisiał jako biały kafelek ucięty u góry. Teraz: tło wycięte, na pasku
+   nad zdjęciem litery jasne (logo-jasne.png), po przewinięciu na papierowym pasku - czarne
+   jak w oryginale (logo.png). Piorun zostaje złoty w obu wersjach. */
+.brand-has-logo{position:relative}
+.brand-logo{height:50px;width:auto;max-width:none}
+.nav.is-stuck .brand-logo{height:50px}
+@media(max-width:680px){.brand-logo{height:44px;max-width:none}}
+.brand-logo--ciemny{display:none}
+.nav.nav-solid .brand-logo:not(.brand-logo--ciemny){display:none}
+.nav.nav-solid .brand-logo--ciemny{display:block}
+/* ⛔ ŻADNEGO drop-shadow na znaku - na iPhonie rysuje się jako jasny PROSTOKĄT całego logo. */
+.brand-logo{filter:none}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   WEJŚCIE NA STRONĘ - kurtyna z logo  (skill `wejscie-na-strone`, 01.10.2026)
+   CO OPOWIADA: prąd. Znak JN z piorunem wychodzi z rozmycia, pod nim linią w kolorze
+   akcentu PRZEPŁYWA PRĄD z iskrą na czele, potem jasna kurtyna schodzi i odsłania
+   ciemne hero. Logo leci do paska i po drodze zmienia się z czarnego (na papierze)
+   na jasne (na zdjęciu) - czyta się jak JEDEN przedmiot. Wzór: Mat-Mar (K. 23.09).
+   🔴 ZMIANA KOLORU IDZIE KRAWĘDZIĄ KURTYNY, nie przenikaniem w czasie: czarna kopia
+   znaku siedzi W płycie (płyta ją przycina swoim clip-path), jasna kopia leci POD płytą
+   tym samym torem. Gdzie jest papier - widać czarny znak, gdzie już zdjęcie - jasny.
+   Przenikanie na timerze (jak w Mat-Marze) na klatkach 01.10 zostawiało czarne litery
+   na ciemnym zdjęciu przez ~0,1 s, bo krawędź mijała pasek przed zmianą koloru.
+   🔴 Kurtyna JASNA, bo hero jest ciemne - ciemna na ciemnym nie odsłania niczego.
+   🔴 Najpierw leci znak, dopiero potem schodzi płyta (opóźnienie .42s) - inaczej
+      ciemne logo jedzie po ciemnym zdjęciu jak naklejka.
+   ⛔ ZERO drop-shadow na logu w KAŻDYM stanie (iOS rysuje z tego biały prostokąt).
+   Bezpieczniki: display:none bez skryptu · twardy limit 3,2 s · klik/kółko/dotyk/klawisz
+   przerywa · prefers-reduced-motion pomija całość · logo musi być pobrane przed startem. */
+.wejscie{display:none}
+.intro-on .wejscie{display:block;position:fixed;inset:0;z-index:200;pointer-events:none}
+.wejscie-plyta{position:absolute;inset:0;z-index:2;background:var(--paper);clip-path:inset(0 0 0 0)}
+.intro-on.intro-out .wejscie-plyta{clip-path:inset(100% 0 0 0);
+  transition:clip-path .66s cubic-bezier(.66,0,.24,1) .42s}
+
+/* `absolute`, nie `fixed`: .wejscie i płyta zajmują cały ekran, więc to ten sam punkt,
+   a zwykły potomek jest przycinany clip-pathem płyty w KAŻDEJ przeglądarce. */
+.wejscie-znak-box{position:absolute;left:50%;top:50%;z-index:2;width:var(--i-w);height:var(--i-h);
+  transform:translate(-50%,-50%)}
+.wejscie-znak-box.wz-pod{z-index:1}
+.intro-on.intro-out .wejscie-znak-box{
+  transform:translate(calc(-50% + var(--i-px)),calc(-50% + var(--i-py))) scale(var(--i-zmniejsz));
+  transition:transform .74s cubic-bezier(.16,.84,.44,1)}
+
+/* TAKT 1 - logo z rozmycia do ostrości, maską w prawo (nie fade+scale) */
+.wejscie-znak{position:absolute;inset:0;display:block;
+  clip-path:inset(0 100% 0 0);transform:scale(1.045);filter:blur(14px)}
+.intro-on.intro-gra .wejscie-znak{clip-path:inset(0 0 0 0);transform:scale(1);filter:blur(0);
+  transition:clip-path .56s cubic-bezier(.16,1,.3,1),filter .56s cubic-bezier(.16,1,.3,1),
+             transform .56s cubic-bezier(.16,1,.3,1)}
+.wejscie-znak img{position:absolute;inset:0;width:100%;height:100%;max-width:none;display:block}
+
+/* TAKT 2 - przepływ prądu: linia rośnie od lewej, na czele iskra. Rusza 0,16 s PO logu. */
+.wejscie-prad{position:absolute;left:0;right:0;top:calc(100% + 16px);height:2px;display:block;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 35%,transparent),var(--accent));
+  transform:scaleX(0);transform-origin:left center;border-radius:2px}
+.wejscie-prad::after{content:"";position:absolute;right:-5px;top:50%;width:10px;height:10px;margin-top:-5px;
+  border-radius:50%;background:#fff;opacity:0;
+  box-shadow:0 0 0 2px var(--accent),0 0 14px 4px color-mix(in srgb,var(--accent) 70%,transparent)}
+.intro-on.intro-gra .wejscie-prad{transform:scaleX(1);transition:transform .5s cubic-bezier(.5,0,.2,1) .16s}
+.intro-on.intro-gra .wejscie-prad::after{animation:wjIskra .5s linear .16s both}
+@keyframes wjIskra{0%{opacity:0}12%{opacity:1}85%{opacity:1}100%{opacity:0}}
+.intro-on.intro-out .wejscie-prad{opacity:0;transition:opacity .22s ease}
+
+/* logo w pasku czeka schowane (visibility - miejsce w pasku ma zostać zajęte) */
+.intro-on .nav .brand-logo{visibility:hidden}
+/* WebKit potrafi narysować rozmycie paska NAD lecącym logo - na czas wejścia bez rozmycia */
+.intro-on .nav{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+@media (prefers-reduced-motion:reduce){
+  .wejscie,.intro-on .wejscie{display:none}
+  .intro-on .nav .brand-logo{visibility:visible}
+}
+@media print{.wejscie{display:none!important}}
